@@ -1,0 +1,6 @@
+@echo off
+echo Installing required packages...
+call "%ProgramFiles%\nodejs\node.exe" "%ProgramFiles%\nodejs\node_modules\npm\bin\npm-cli.js" install dotenv mongoose
+echo Running migration script...
+call "%ProgramFiles%\nodejs\node.exe" "src\scripts\migrateKnowledgeBase.js"
+pause 
