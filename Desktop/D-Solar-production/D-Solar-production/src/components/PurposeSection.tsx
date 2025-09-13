@@ -1,5 +1,13 @@
 // PurposeSection.tsx
 import React, { useEffect, useState, useRef } from 'react';
+  // Ref for the footer
+  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const footer = document.getElementById('footer');
+    if (footer) {
+      footer.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 import { motion } from 'framer-motion';
 import { Eye, Target, Users, Lightbulb } from 'lucide-react';
 
@@ -41,11 +49,11 @@ const PurposeSection: React.FC = () => {
       entries.forEach(entry => {
         const id = entry.target.id;
         if (id === 'vision-card' && entry.isIntersecting) {
-          setCardsInView(prev => ({ ...prev, vision: true }));
+          setCardsInView((prev: typeof cardsInView) => ({ ...prev, vision: true }));
         } else if (id === 'mission-card' && entry.isIntersecting) {
-          setCardsInView(prev => ({ ...prev, mission: true }));
+          setCardsInView((prev: typeof cardsInView) => ({ ...prev, mission: true }));
         } else if (id === 'values-card' && entry.isIntersecting) {
-          setCardsInView(prev => ({ ...prev, values: true }));
+          setCardsInView((prev: typeof cardsInView) => ({ ...prev, values: true }));
         }
       });
     };
@@ -91,11 +99,11 @@ const PurposeSection: React.FC = () => {
       opacity: 1,
       x: 0,
       y: 0,
-      transition: { 
-        type: "spring", 
-        duration: 0.4, 
-        stiffness: 300, 
-        damping: 24 
+      transition: {
+        type: 'spring' as const,
+        duration: 0.4,
+        stiffness: 300,
+        damping: 24
       }
     }
   };
@@ -305,11 +313,12 @@ const PurposeSection: React.FC = () => {
             >
             ABOUT OUR WORKS →
             </a>
-            <a 
-            href="#footer" 
-            className="border-2 border-black text-black px-6 py-3 rounded hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
+            <a
+              href="#footer"
+              onClick={handleContactClick}
+              className="border-2 border-black text-black px-6 py-3 rounded hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
             >
-            CONTACT US NOW →
+              CONTACT US NOW →
             </a>
         </motion.div>
       </div>
