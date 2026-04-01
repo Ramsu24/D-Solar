@@ -260,7 +260,7 @@ async function isQuerySolarRelated(query: string): Promise<boolean> {
           content: `Is the following query related to solar energy or solar systems? Answer only with "yes" or "no".\n\nQuery: "${query}"` 
         }
       ],
-      model: process.env.GROQ_MODEL || 'deepseek-r1-distill-llama-70b',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       temperature: 0.1,
       max_completion_tokens: 10,
       stream: false
@@ -304,7 +304,7 @@ async function isPricingQuery(query: string): Promise<boolean> {
           content: `Is the following query specifically asking about solar panel prices, packages, or system costs? Answer only with "yes" or "no".\n\nQuery: "${query}"` 
         }
       ],
-      model: process.env.GROQ_MODEL || 'deepseek-r1-distill-llama-70b',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       temperature: 0.1,
       max_completion_tokens: 10,
       stream: false
@@ -593,7 +593,7 @@ Respond with valid JSON only.
         { role: 'system', content: 'You are a precise FAQ matching system that outputs only valid JSON.' },
         { role: 'user', content: promptContent }
       ],
-      model: process.env.GROQ_MODEL || 'deepseek-r1-distill-llama-70b',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       temperature: 0.1,
       max_completion_tokens: 600,
       stream: false,
@@ -859,7 +859,7 @@ INSTRUCTIONS:
         })),
         { role: 'user', content: body.message }
       ],
-      model: process.env.GROQ_MODEL || 'deepseek-r1-distill-llama-70b',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       temperature: 0.7,
       max_completion_tokens: 475,
       top_p: 0.95,
