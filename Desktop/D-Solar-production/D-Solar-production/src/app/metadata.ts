@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "D-Solar - Powering Filipino Energy Independence",
-  description: "D-Solar is a leading solar energy solutions provider in the Philippines, offering residential and commercial solar panel installation, financing options, and sustainable energy solutions.",
-  keywords: "solar energy, solar panels, renewable energy, Philippines, solar installation, solar financing, sustainable energy, green energy, solar power, D-Solar",
+  metadataBase: new URL("https://d-solar.asia"),
+  title: {
+    default: "D-Solar | #1 Solar Panel Installation in the Philippines",
+    template: "%s | D-Solar Philippines",
+  },
+  description: "D-Solar is a leading solar energy solutions provider in the Philippines. ₱0 down payment, 25-year warranty, typhoon-ready solar panel installation for homes and businesses. Cut energy bills by up to 70%.",
+  keywords: "solar panel installation Philippines, solar energy Philippines, residential solar panels, commercial solar installation, solar financing Philippines, net metering Philippines, renewable energy, green energy, D-Solar, solar power system, solar loan Philippines, zero down payment solar",
   authors: [{ name: "D-Solar Team" }],
   creator: "D-Solar",
   publisher: "D-Solar",
@@ -21,16 +25,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://dsolar.com.ph",
+    url: "https://d-solar.asia",
     siteName: "D-Solar",
     title: "D-Solar - Powering Filipino Energy Independence",
     description: "Leading solar energy solutions provider in the Philippines. Expert installation, competitive financing, and sustainable energy solutions for homes and businesses.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "https://d-solar.asia/og-image.png",
         width: 1200,
         height: 630,
-        alt: "D-Solar - Solar Energy Solutions",
+        alt: "D-Solar - Solar Energy Solutions Philippines",
       },
     ],
   },
@@ -38,13 +42,13 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "D-Solar - Powering Filipino Energy Independence",
     description: "Leading solar energy solutions provider in the Philippines. Expert installation, competitive financing, and sustainable energy solutions.",
-    images: ["/twitter-image.jpg"],
+    images: ["https://d-solar.asia/og-image.png"],
     creator: "@D-SolarPH",
   },
   verification: {
-    google: "your-google-verification-code",
+    google: "ZAiKKplJGVB_MfpA-DN30WyM7I-cVTZKe32xpNIMeRE",
   },
   alternates: {
-    canonical: "https://dsolar.com.ph",
+    canonical: "https://d-solar.asia",
   },
 }; 

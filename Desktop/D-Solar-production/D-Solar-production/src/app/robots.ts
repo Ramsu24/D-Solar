@@ -12,8 +12,8 @@ export default function robots(): MetadataRoute.Robots {
       ],
     },
     sitemap: [
-      'https://dsolar.vercel.app/sitemap.xml',
-      'https://dsolar.vercel.app/server-sitemap.xml'
+      'https://d-solar.asia/sitemap.xml',
+      'https://d-solar.asia/server-sitemap.xml'
     ],
   };
 } 
