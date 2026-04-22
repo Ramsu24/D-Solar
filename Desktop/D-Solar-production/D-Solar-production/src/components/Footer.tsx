@@ -87,7 +87,7 @@ export default function Footer() {
               </div>
               <div className="bg-white p-2 rounded-lg transition-transform duration-300 hover:scale-105">
                 <Image
-                  src="/huawei-logo.png"
+                  src="/Huawei-Logo.png"
                   alt="Huawei Certification"
                   width={80}
                   height={40}
@@ -105,7 +105,7 @@ export default function Footer() {
               </div>
               <div className="bg-white p-2 rounded-lg transition-transform duration-300 hover:scale-105">
                 <Image
-                  src="/Solis-logo.png"
+                  src="/Solis-Logo.png"
                   alt="Solis Certification"
                   width={80}
                   height={40}
