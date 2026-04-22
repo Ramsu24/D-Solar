@@ -4,9 +4,9 @@ import connectDB from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://dsolar.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
 
-  // Static pages
+  // Static pages — only routes that actually exist
   const staticPages: ISitemapField[] = [
     {
       loc: baseUrl,
@@ -15,25 +15,13 @@ export async function GET() {
       priority: 1,
     },
     {
-      loc: `${baseUrl}/residential`,
+      loc: `${baseUrl}/about`,
       lastmod: new Date().toISOString(),
       changefreq: 'monthly',
       priority: 0.8,
     },
     {
-      loc: `${baseUrl}/commercial`,
-      lastmod: new Date().toISOString(),
-      changefreq: 'monthly',
-      priority: 0.8,
-    },
-    {
-      loc: `${baseUrl}/financing`,
-      lastmod: new Date().toISOString(),
-      changefreq: 'monthly',
-      priority: 0.8,
-    },
-    {
-      loc: `${baseUrl}/net-metering`,
+      loc: `${baseUrl}/projects`,
       lastmod: new Date().toISOString(),
       changefreq: 'monthly',
       priority: 0.8,
@@ -43,6 +31,12 @@ export async function GET() {
       lastmod: new Date().toISOString(),
       changefreq: 'daily',
       priority: 0.9,
+    },
+    {
+      loc: `${baseUrl}/social`,
+      lastmod: new Date().toISOString(),
+      changefreq: 'monthly',
+      priority: 0.5,
     },
   ];
 

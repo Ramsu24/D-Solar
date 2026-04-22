@@ -1,13 +1,8 @@
-'use client';
-
 import { Geist, Geist_Mono } from "next/font/google";
 import { Montserrat, Open_Sans } from 'next/font/google';
 import "./globals.css";
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import ScrollProgressBar from '@/components/ScrollProgressBar'
-import { Analytics } from "@vercel/analytics/react"
-import { usePathname } from 'next/navigation'
+import LayoutClient from '@/components/LayoutClient';
+export { metadata } from './metadata';
 
 // Configure Montserrat for headers
 const montserrat = Montserrat({
@@ -33,31 +28,73 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-function RootLayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith('/admin');
-
-  return (
-    <body className={`font-sans m-0 p-0 overflow-x-hidden ${montserrat.variable} ${openSans.variable} ${geistSans.variable} ${geistMono.variable}`}>
-      <Header />
-      {!isAdminPage && <ScrollProgressBar height={10} showPercentage={false} />}
-      <div>
-        {children}
-      </div>
-      {!isAdminPage && <Footer />}
-      <Analytics />
-    </body>
-  );
-}
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "D-Solar",
+    "description": "Leading solar energy solutions provider in the Philippines offering residential and commercial solar panel installation, financing options, and sustainable energy solutions.",
+    "url": "https://d-solar.asia",
+    "logo": "https://d-solar.asia/logo.png",
+    "image": "https://d-solar.asia/og-image.png",
+    "telephone": "",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "PH"
+    },
+    "sameAs": [],
+    "priceRange": "$$",
+    "serviceArea": {
+      "@type": "Country",
+      "name": "Philippines"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Solar Energy Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Solar Panel Installation",
+            "description": "Professional solar panel installation for homes and businesses in the Philippines"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Solar Design",
+            "description": "Custom solar system design using Lean Six Sigma methodology"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Solar Financing",
+            "description": "Zero down payment solar financing options with 25-year warranty"
+          }
+        }
+      ]
+    }
+  };
+
   return (
     <html lang="en">
-      <RootLayoutContent>{children}</RootLayoutContent>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
+      <body className={`font-sans m-0 p-0 overflow-x-hidden ${montserrat.variable} ${openSans.variable} ${geistSans.variable} ${geistMono.variable}`}>
+        <LayoutClient>{children}</LayoutClient>
+      </body>
     </html>
   );
 }

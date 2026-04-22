@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 // The sitemap needs to be fully static for Next.js static site generation
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://dsolar.com.ph';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
 
-  // Static pages
+  // Static pages — only include routes that actually have page.tsx files
   return [
     {
       url: baseUrl,
@@ -13,25 +13,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/residential`,
+      url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/commercial`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/financing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/net-metering`,
+      url: `${baseUrl}/projects`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -41,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/social`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ];
 } 

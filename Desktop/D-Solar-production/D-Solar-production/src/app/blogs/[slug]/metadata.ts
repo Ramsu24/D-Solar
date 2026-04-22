@@ -12,7 +12,7 @@ interface BlogPost {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://dsolar.com.ph';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
   const { slug } = await params;
 
   try {
