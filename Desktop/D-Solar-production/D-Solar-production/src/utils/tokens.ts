@@ -1,11 +1,11 @@
-import crypto from 'crypto';
-
 /**
  * Generates a random confirmation token for email verification
  * @returns The generated token
  */
 export function generateToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
