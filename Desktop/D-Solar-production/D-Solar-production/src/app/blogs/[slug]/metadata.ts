@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import connectDB from '@/lib/mongodb';
+import Blog from '@/models/Blog';
 
 interface BlogPost {
   title: string;
@@ -12,17 +14,21 @@ interface BlogPost {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://d-solar.asia');
   const { slug } = await params;
 
   try {
-    // Fetch blog data
-    const response = await fetch(`${baseUrl}/api/blogs/${slug}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch blog post: ${response.status}`);
-    }
+    await connectDB();
+    const blog = await Blog.findOne({ slug }).lean<BlogPost | null>();
 
-    const blog: BlogPost = await response.json();
+    if (!blog) {
+      return {
+        title: 'Blog Post | D-Solar',
+        description: 'Read our latest blog post',
+      };
+    }
 
     // Prepare meta tags
     return {

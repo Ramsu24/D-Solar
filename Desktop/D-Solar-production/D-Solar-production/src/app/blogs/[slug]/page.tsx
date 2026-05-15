@@ -161,12 +161,6 @@ export default function BlogPost() {
             
             <h1 className="text-4xl font-bold mb-4 text-gray-900">{blog.title}</h1>
             
-            {blog.shortDescription && (
-              <p className="text-xl text-gray-600 mb-6 italic">
-                {blog.shortDescription}
-              </p>
-            )}
-            
             <div className="flex items-center mb-8">
               <img 
                 src="/logo.png" 
