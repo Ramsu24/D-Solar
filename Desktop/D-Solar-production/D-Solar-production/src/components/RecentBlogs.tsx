@@ -68,8 +68,13 @@ export default function RecentBlogs() {
   
   // Function to truncate content for preview
   const truncateContent = (content: string, maxLength: number = 120) => {
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
+    const plainText = content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (plainText.length <= maxLength) return plainText;
+    return plainText.substring(0, maxLength) + '...';
   };
 
   if (isLoading) {
