@@ -48,6 +48,12 @@ interface BlogPost {
   updatedAt: string;
 }
 
+interface BlogSuggestion {
+  id: string;
+  title: string;
+  slug: string;
+}
+
 export default function EditBlog() {
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [title, setTitle] = useState('');
@@ -65,6 +71,8 @@ export default function EditBlog() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [readingTime, setReadingTime] = useState(0);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [suggestedBlogs, setSuggestedBlogs] = useState<BlogSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   
   const router = useRouter();
   const params = useParams();
@@ -117,6 +125,38 @@ export default function EditBlog() {
     const words = content.trim().split(/\s+/).length;
     setReadingTime(Math.ceil(words / wordsPerMinute));
   }, [content]);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      setIsLoadingSuggestions(true);
+
+      try {
+        const response = await fetch('/api/admin/blogs?order=-1');
+        if (!response.ok) {
+          throw new Error('Failed to load blog suggestions');
+        }
+
+        const data = await response.json();
+        const normalized: BlogSuggestion[] = Array.isArray(data)
+          ? data
+              .filter((item) => item?.slug && item?.title)
+              .map((item) => ({
+                id: String(item.id || item.slug),
+                title: String(item.title),
+                slug: String(item.slug),
+              }))
+          : [];
+
+        setSuggestedBlogs(normalized);
+      } catch {
+        setSuggestedBlogs([]);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    fetchSuggestions();
+  }, [id]);
   
   // Image drop zone handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -162,13 +202,55 @@ export default function EditBlog() {
       case 'list':
         insertion = `\n- ${selectedText}`;
         break;
-      case 'link':
-        insertion = `[${selectedText}](url)`;
+      case 'link': {
+        const rawHref = window.prompt(
+          'Enter internal URL (example: /blogs/solar-panel-installation-process)',
+          '/blogs/'
+        );
+
+        if (!rawHref) return;
+
+        const href = rawHref.trim();
+        if (!href.startsWith('/')) {
+          setError('Use an internal URL that starts with "/".');
+          return;
+        }
+
+        const linkText = selectedText || 'Related article';
+        insertion = `[${linkText}](${href})`;
         break;
+      }
     }
 
     const newContent = content.substring(0, start) + insertion + content.substring(end);
     setContent(newContent);
+  };
+
+  const insertInternalLink = (linkSlug: string, linkTitle: string) => {
+    const textarea = document.getElementById('content') as HTMLTextAreaElement | null;
+    const insertionTarget = `[${linkTitle}](/blogs/${linkSlug})`;
+
+    if (!textarea) {
+      setContent((prev) => `${prev}\n\n${insertionTarget}`);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end).trim();
+    const insertion = selectedText
+      ? `[${selectedText}](/blogs/${linkSlug})`
+      : insertionTarget;
+
+    const newContent = content.substring(0, start) + insertion + content.substring(end);
+    setContent(newContent);
+    setError(null);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + insertion.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
   };
   
   // Generate slug from title
@@ -271,6 +353,10 @@ export default function EditBlog() {
       </div>
     );
   };
+
+  const visibleSuggestions = suggestedBlogs
+    .filter((blogItem) => blogItem.slug !== slug)
+    .slice(0, 8);
   
   if (isLoading) {
     return (
@@ -527,6 +613,38 @@ export default function EditBlog() {
                   <div className="flex justify-between text-sm text-slate-500">
                     <span>{content.length} characters</span>
                     <span>{content.trim().split(/\s+/).length} words</span>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <h3 className="text-sm font-semibold text-slate-700">Suggested Internal Links</h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Select text in content, then click Insert to create an internal link.
+                    </p>
+                    {isLoadingSuggestions ? (
+                      <p className="mt-3 text-sm text-slate-500">Loading suggestions...</p>
+                    ) : visibleSuggestions.length === 0 ? (
+                      <p className="mt-3 text-sm text-slate-500">No blog suggestions available yet.</p>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {visibleSuggestions.map((blogItem) => (
+                          <div
+                            key={blogItem.id}
+                            className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-slate-700">{blogItem.title}</p>
+                              <p className="text-xs text-slate-500">/blogs/{blogItem.slug}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => insertInternalLink(blogItem.slug, blogItem.title)}
+                              className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                            >
+                              Insert
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

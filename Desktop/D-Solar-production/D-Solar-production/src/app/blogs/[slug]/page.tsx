@@ -1,8 +1,8 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
+import connectDB from '@/lib/mongodb';
+import Blog from '@/models/Blog';
 
 interface BlogPost {
   id: string;
@@ -18,123 +18,188 @@ interface BlogPost {
   updatedAt: string;
 }
 
-export default function BlogPost() {
-  const [blog, setBlog] = useState<BlogPost | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const router = useRouter();
-  const params = useParams();
-  const slug = params.slug as string;
-  
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const response = await fetch('/api/admin/blogs');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch blog posts');
-        }
-        
-        const data = await response.json();
-        const foundBlog = data.find((post: BlogPost) => post.slug === slug);
-        
-        if (!foundBlog) {
-          throw new Error('Blog post not found');
-        }
-        
-        setBlog(foundBlog);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setIsLoading(false);
+export const revalidate = 300;
+
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const sanitizeHref = (href: string) => {
+  const trimmed = href.trim();
+  if (trimmed.startsWith('/') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  return '#';
+};
+
+const convertMarkdownLinks = (text: string) => text.replace(
+  /\[([^\]]+)\]\(([^)]+)\)/g,
+  (_match, label: string, href: string) => {
+    const safeLabel = escapeHtml(label);
+    const safeHref = escapeHtml(sanitizeHref(href));
+    return `<a href="${safeHref}" class="text-blue-600 hover:text-blue-800 underline">${safeLabel}</a>`;
+  }
+);
+
+const renderContent = (content: string) => {
+  const formattedContent = content
+    .split('\n\n')
+    .map((paragraph, idx) => {
+      if (paragraph.startsWith('# ')) {
+        return <h1 key={idx} className="text-3xl font-bold my-6">{paragraph.substring(2)}</h1>;
       }
-    };
-    
-    fetchBlog();
-  }, [slug]);
-  
-  // Format and render content with simple markdown parsing
-  const renderContent = (content: string) => {
-    // Very basic markdown parser
-    const formattedContent = content
-      .split('\n\n')
-      .map((paragraph, idx) => {
-        // Handle headings
-        if (paragraph.startsWith('# ')) {
-          return <h1 key={idx} className="text-3xl font-bold my-6">{paragraph.substring(2)}</h1>;
-        }
-        if (paragraph.startsWith('## ')) {
-          return <h2 key={idx} className="text-2xl font-bold my-5">{paragraph.substring(3)}</h2>;
-        }
-        if (paragraph.startsWith('### ')) {
-          return <h3 key={idx} className="text-xl font-bold my-4">{paragraph.substring(4)}</h3>;
-        }
-        
-        // Handle lists
-        if (paragraph.includes('\n- ')) {
-          const listItems = paragraph.split('\n- ');
-          const firstPart = listItems.shift(); // Get text before the list
-          
-          return (
-            <div key={idx}>
-              {firstPart && <p className="mb-4">{firstPart}</p>}
-              <ul className="list-disc pl-6 mb-6">
-                {listItems.map((item, itemIdx) => (
-                  <li key={itemIdx} className="mb-2">{item}</li>
-                ))}
-              </ul>
-            </div>
-          );
-        }
-        
-        // Regular paragraph with bold and italic formatting
-        const formattedParagraph = paragraph
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
+      if (paragraph.startsWith('## ')) {
+        return <h2 key={idx} className="text-2xl font-bold my-5">{paragraph.substring(3)}</h2>;
+      }
+      if (paragraph.startsWith('### ')) {
+        return <h3 key={idx} className="text-xl font-bold my-4">{paragraph.substring(4)}</h3>;
+      }
+
+      if (paragraph.includes('\n- ')) {
+        const listItems = paragraph.split('\n- ');
+        const firstPart = listItems.shift();
+
         return (
-          <p 
-            key={idx} 
-            className="mb-6" 
-            dangerouslySetInnerHTML={{ __html: formattedParagraph }}
-          />
+          <div key={idx}>
+            {firstPart && <p className="mb-4">{firstPart}</p>}
+            <ul className="list-disc pl-6 mb-6">
+              {listItems.map((item, itemIdx) => (
+                <li key={itemIdx} className="mb-2">{item}</li>
+              ))}
+            </ul>
+          </div>
         );
-      });
-    
-    return <div className="prose prose-lg max-w-none">{formattedContent}</div>;
+      }
+
+      const formattedParagraph = convertMarkdownLinks(paragraph)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+      return (
+        <p
+          key={idx}
+          className="mb-6"
+          dangerouslySetInnerHTML={{ __html: formattedParagraph }}
+        />
+      );
+    });
+
+  return <div className="prose prose-lg max-w-none">{formattedContent}</div>;
+};
+
+const toIsoString = (value: unknown) => {
+  const date = new Date(value as string | number | Date);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+};
+
+export async function generateStaticParams() {
+  try {
+    await connectDB();
+    const slugs = await Blog.find({}, 'slug').lean<Array<{ slug: string }>>();
+    return slugs.map((item) => ({ slug: item.slug }));
+  } catch {
+    return [];
+  }
+}
+
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  await connectDB();
+
+  const blogDoc = await Blog.findOne({ slug })
+    .lean<Record<string, unknown> | null>();
+
+  if (!blogDoc) {
+    notFound();
+  }
+
+  const blog: BlogPost = {
+    id: String(blogDoc._id),
+    title: String(blogDoc.title || ''),
+    slug: String(blogDoc.slug || ''),
+    content: String(blogDoc.content || ''),
+    shortDescription: blogDoc.shortDescription ? String(blogDoc.shortDescription) : undefined,
+    imageUrl: String(blogDoc.imageUrl || '/default-blog-image.jpg'),
+    author: blogDoc.author ? String(blogDoc.author) : 'D-Solar Team',
+    category: blogDoc.category ? String(blogDoc.category) : undefined,
+    tags: Array.isArray(blogDoc.tags) ? blogDoc.tags.map((tag) => String(tag)) : [],
+    createdAt: toIsoString(blogDoc.createdAt),
+    updatedAt: toIsoString(blogDoc.updatedAt || blogDoc.createdAt),
   };
-  
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-16 mt-16">
-        <div className="text-center py-8">
-          <p className="text-gray-500">Loading blog post...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error || !blog) {
-    return (
-      <div className="container mx-auto px-4 py-16 mt-16">
-        
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4" role="alert">
-          <p>{error || 'Blog post not found'}</p>
-          
-          <button
-            onClick={() => router.push('/blogs')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Back to Blogs
-          </button>
-        </div>
-      </div>
-    );
-  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
+  const pageUrl = `${baseUrl}/blogs/${blog.slug}`;
+  const wordCount = blog.content.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  const readMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: blog.title,
+    description: blog.shortDescription || `Read about ${blog.title}`,
+    datePublished: blog.createdAt,
+    dateModified: blog.updatedAt,
+    author: {
+      '@type': 'Organization',
+      name: blog.author || 'D-Solar Team',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'D-Solar',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: pageUrl,
+    image: [blog.imageUrl.startsWith('http') ? blog.imageUrl : `${baseUrl}${blog.imageUrl}`],
+    keywords: blog.tags,
+    articleSection: blog.category,
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blogs',
+        item: `${baseUrl}/blogs`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: blog.title,
+        item: pageUrl,
+      },
+    ],
+  };
   
   return (
     <main className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="container mx-auto px-4 py-16 mt-16">
         <Link href="/blogs" className="text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -180,7 +245,7 @@ export default function BlogPost() {
                   {blog.updatedAt !== blog.createdAt && (
                     <span> (Updated: {new Date(blog.updatedAt).toLocaleDateString()})</span>
                   )}
-                  <span> · {Math.ceil(blog.content.length / 1000)} min read</span>
+                  <span> · {readMinutes} min read</span>
                 </div>
               </div>
             </div>
@@ -207,7 +272,7 @@ export default function BlogPost() {
               <h3 className="text-lg font-medium text-gray-900 mb-3">Share this article</h3>
               <div className="flex space-x-4">
                 <a 
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(blog.title)}&url=${encodeURIComponent(window.location.href)}`} 
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(blog.title)}&url=${encodeURIComponent(pageUrl)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700"
@@ -217,7 +282,7 @@ export default function BlogPost() {
                   </svg>
                 </a>
                 <a 
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} 
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800"
@@ -227,7 +292,7 @@ export default function BlogPost() {
                   </svg>
                 </a>
                 <a 
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} 
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-700 hover:text-blue-900"

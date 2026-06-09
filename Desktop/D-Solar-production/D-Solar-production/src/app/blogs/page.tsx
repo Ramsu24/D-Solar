@@ -1,17 +1,20 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import connectDB from '@/lib/mongodb';
+import Blog from '@/models/Blog';
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
   content: string;
+  shortDescription?: string;
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export const revalidate = 300;
 
 // Removing animation keyframes
 const styles = `
@@ -25,45 +28,73 @@ const styles = `
   }
 `;
 
-export default function Blogs() {
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const response = await fetch('/api/admin/blogs');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch blog posts');
-        }
-        
-        const data = await response.json();
-        setBlogs(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchBlogs();
-  }, []);
-  
-  // Function to truncate content for preview
-  const truncateContent = (content: string, maxLength: number = 150) => {
-    const plainText = content
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+const truncateContent = (content: string, maxLength: number = 150) => {
+  const plainText = content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-    if (plainText.length <= maxLength) return plainText;
-    return plainText.substring(0, maxLength) + '...';
+  if (plainText.length <= maxLength) return plainText;
+  return `${plainText.substring(0, maxLength)}...`;
+};
+
+const toIsoString = (value: unknown) => {
+  const date = new Date(value as string | number | Date);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+};
+
+export default async function Blogs() {
+  let blogs: BlogPost[] = [];
+  let error: string | null = null;
+
+  try {
+    await connectDB();
+    const posts = await Blog.find({}, 'title slug content shortDescription imageUrl createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .lean<Array<Record<string, unknown>>>();
+
+    blogs = posts.map((post) => ({
+      id: String(post._id),
+      title: String(post.title || ''),
+      slug: String(post.slug || ''),
+      content: String(post.content || ''),
+      shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
+      imageUrl: String(post.imageUrl || '/default-blog-image.jpg'),
+      createdAt: toIsoString(post.createdAt),
+      updatedAt: toIsoString(post.updatedAt || post.createdAt),
+    }));
+  } catch (err) {
+    error = err instanceof Error ? err.message : 'An error occurred while loading blog posts.';
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
+  const collectionSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'D-Solar Blog',
+    description: 'Latest blog posts and insights about solar energy in the Philippines.',
+    url: `${baseUrl}/blogs`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: blogs.map((blog, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${baseUrl}/blogs/${blog.slug}`,
+        name: blog.title,
+      })),
+    },
   };
   
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 to-white pt-28">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+      />
       {/* Simple decorative elements instead of animations */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Top right decorative element */}
@@ -80,11 +111,7 @@ export default function Blogs() {
           </h1>
         </div>
         
-        {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading blog posts...</p>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4" role="alert">
             <p>{error}</p>
           </div>
@@ -104,7 +131,7 @@ export default function Blogs() {
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-2 text-primary">{blog.title}</h2>
                   <p className="text-gray-600 mb-4">
-                    {truncateContent(blog.content)}
+                    {truncateContent(blog.shortDescription || blog.content)}
                   </p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">
@@ -125,7 +152,7 @@ export default function Blogs() {
       </div>
       
       {/* Add style tag for subtle animations */}
-      <style jsx global>{styles}</style>
+      <style dangerouslySetInnerHTML={{ __html: styles }} />
     </main>
   );
 } 
