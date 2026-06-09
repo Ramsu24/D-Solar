@@ -45,6 +45,14 @@ const convertMarkdownLinks = (text: string) => text.replace(
   }
 );
 
+const convertPlainUrls = (text: string) => text.replace(
+  /(?<!href="|src=")(https?:\/\/[^\s<>"]+)/g,
+  (url) => {
+    const safeUrl = escapeHtml(sanitizeHref(url));
+    return `<a href="${safeUrl}" class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
+  }
+);
+
 const renderContent = (content: string) => {
   const formattedContent = content
     .split('\n\n')
@@ -75,7 +83,7 @@ const renderContent = (content: string) => {
         );
       }
 
-      const formattedParagraph = convertMarkdownLinks(paragraph)
+      const formattedParagraph = convertPlainUrls(convertMarkdownLinks(paragraph))
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 

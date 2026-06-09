@@ -295,7 +295,9 @@ export default function CreateBlog() {
       .replace(/^# (.*?)$/gm, '<h1 class="text-3xl font-bold my-4">$1</h1>')
       .replace(/^## (.*?)$/gm, '<h2 class="text-2xl font-bold my-3">$1</h2>')
       .replace(/^### (.*?)$/gm, '<h3 class="text-xl font-bold my-2">$1</h3>')
-      .replace(/^\- (.*?)$/gm, '<li class="ml-4">$1</li>');
+      .replace(/^\- (.*?)$/gm, '<li class="ml-4">$1</li>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(/(?<!href="|src=")(https?:\/\/[^\s<>"]+)/g, '<a href="$1" class="text-blue-600 hover:text-blue-800 underline break-all" target="_blank" rel="noopener noreferrer">$1</a>');
     
     return (
       <div className="preview-container bg-white rounded-lg p-8 shadow-lg">
