@@ -13,7 +13,7 @@ interface BlogPost {
   updatedAt: string;
 }
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 // Removing animation keyframes
 const styles = `
