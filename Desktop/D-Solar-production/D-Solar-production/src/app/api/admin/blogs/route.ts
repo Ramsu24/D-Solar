@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import connectDB from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
@@ -79,7 +80,9 @@ export async function POST(request: NextRequest) {
       category: data.category,
       tags: data.tags
     });
-    
+
+    revalidatePath('/blogs');
+
     return NextResponse.json(newPost, { status: 201 });
   } catch (error) {
     console.error('Error creating blog post:', error);
