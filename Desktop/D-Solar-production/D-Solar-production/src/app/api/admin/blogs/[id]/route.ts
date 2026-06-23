@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import connectDB from '@/lib/mongodb';
 import Blog from '@/models/Blog';
 
@@ -94,6 +95,9 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
       );
     }
 
+    revalidatePath('/blogs');
+    revalidatePath(`/blogs/${updatedPost.slug}`);
+
     return NextResponse.json(updatedPost);
   } catch (error) {
     console.error('Error updating blog post:', error);
@@ -117,6 +121,9 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
         { status: 404 }
       );
     }
+
+    revalidatePath('/blogs');
+    revalidatePath(`/blogs/${deletedPost.slug}`);
 
     return NextResponse.json({
       success: true,
