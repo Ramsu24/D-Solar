@@ -7,7 +7,6 @@ interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
   shortDescription?: string;
   imageUrl: string;
   createdAt: string;
@@ -53,7 +52,7 @@ export default async function Blogs() {
 
   try {
     await connectDB();
-    const posts = await Blog.find({}, 'title slug content shortDescription imageUrl createdAt updatedAt')
+    const posts = await Blog.find({}, 'title slug shortDescription imageUrl createdAt updatedAt')
       .sort({ createdAt: -1 })
       .lean<Array<Record<string, unknown>>>();
 
@@ -61,7 +60,6 @@ export default async function Blogs() {
       id: String(post._id),
       title: String(post.title || ''),
       slug: String(post.slug || ''),
-      content: String(post.content || ''),
       shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
       imageUrl: String(post.imageUrl || '/default-blog-image.jpg'),
       createdAt: toIsoString(post.createdAt),
@@ -131,7 +129,7 @@ export default async function Blogs() {
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-2 text-primary">{blog.title}</h2>
                   <p className="text-gray-600 mb-4">
-                    {truncateContent(blog.shortDescription || blog.content)}
+                    {truncateContent(blog.shortDescription || '')}
                   </p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">
