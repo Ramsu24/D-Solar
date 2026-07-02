@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env');
-}
-
 const MONGODB_URI = process.env.MONGODB_URI;
 
 const connectDB = async () => {
+  if (!MONGODB_URI) {
+    console.warn('MONGODB_URI not configured; skipping MongoDB connection');
+    return;
+  }
+
   try {
     if (mongoose.connections[0].readyState) {
       console.log('Using existing MongoDB connection');

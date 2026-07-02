@@ -177,11 +177,11 @@ return (
 export default function TestimonialsSection() {
   const testimonials = [
     {
-      quote: "I would recommend D-TEC Solutions to anyone who is thinking of having CCTV installed. The service I received was very quick, efficient and informative. Installation was trouble free and subsequent response to support requests have been rapid. A pleasure to do business with and I can highly recommend them.",
+      quote: "Switching to solar with D-Solar helped our team cut operating costs significantly while improving energy reliability for our facility. The installation process was smooth, efficient, and backed by strong support after completion.",
       author: "Leslie Lappay",
-      position: "Unilever Philippines",
-      company: "Paco",
-      logo: "/uniliver.png" // Path to your logo
+      position: "Operations Lead",
+      company: "Unilever Philippines",
+      logo: "/uniliver.png"
     },
     {
       quote: "Switching to solar with D-Solar was one of the best business decisions we've made. Our energy bills have been reduced by over 60% and the typhoon-ready system gives us peace of mind during storm season.",
