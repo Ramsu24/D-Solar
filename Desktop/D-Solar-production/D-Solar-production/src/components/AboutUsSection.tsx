@@ -92,11 +92,11 @@ const AboutUsSection: React.FC = () => {
             </h3>
             
             <p className="text-gray-200 mb-6 text-lg">
-              From 2019, D-Solar has been your trusted partner in fulfilling your solar installation needs with high standards of quality and guaranteed product efficiency.
+              Since 2018, D-Solar has been your trusted partner in fulfilling your solar installation needs with high standards of quality, dependable workmanship, and guaranteed product efficiency.
             </p>
             
             <p className="text-gray-200 mb-6 text-lg">
-              With an 8-year experience in this industry and hundreds of installations nationwide, we possess the expertise and resources needed to install your own solar system in time and within budget while ensuring utmost safety standards.
+              With years of experience and hundreds of installations nationwide, we possess the expertise and resources needed to install your solar system on time, within budget, and to the highest safety standards.
             </p>
             
             <div className="bg-blue-800/50 p-6 rounded-lg border border-blue-700 mt-8">

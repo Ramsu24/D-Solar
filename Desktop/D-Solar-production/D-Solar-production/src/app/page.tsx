@@ -13,6 +13,7 @@ import AboutUsSection from '@/components/AboutUsSection';
 import RecentBlogs from '@/components/RecentBlogs';
 import ChatBot from '@/components/ChatBot';
 import CalculatorPromoSection from '@/components/CalculatorPromoSection';
+import FaqSection from '@/components/FaqSection';
 import dynamic from 'next/dynamic';
 
 
@@ -46,6 +47,7 @@ export default function Home() {
         <Clientcarousel />
         <TestimonialCarousel />
         <ServicesSection />
+        <FaqSection />
         <AboutUsSection />
         <RecentBlogs />
         <ChatBot />
