@@ -46,6 +46,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .sort({ createdAt: -1 })
       .lean<Array<{ slug: string; updatedAt?: Date; createdAt: Date }>>();
 
+    if (!blogPosts || blogPosts.length === 0) {
+      console.warn('⚠️ No blog posts found in database for sitemap');
+      return staticPages;
+    }
+
     const blogPages: MetadataRoute.Sitemap = blogPosts
       .filter((post) => post.slug)
       .map((post) => ({
@@ -55,9 +60,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       }));
 
+    console.log(`✅ Sitemap generated: ${staticPages.length} static + ${blogPages.length} blog pages`);
     return [...staticPages, ...blogPages];
   } catch (error) {
-    console.error('Error generating sitemap with blog posts:', error);
+    console.error('❌ CRITICAL: Error generating sitemap with blog posts:', error);
+    console.error('This means blog posts are NOT in the sitemap and won\'t be indexed by Google!');
     return staticPages;
   }
 } 
