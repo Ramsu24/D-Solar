@@ -18,6 +18,14 @@ interface BlogPost {
   updatedAt: string;
 }
 
+interface RelatedBlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  shortDescription?: string;
+  category?: string;
+}
+
 export const revalidate = 300;
 
 const escapeHtml = (value: string) => value
@@ -142,6 +150,55 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     createdAt: toIsoString(blogDoc.createdAt),
     updatedAt: toIsoString(blogDoc.updatedAt || blogDoc.createdAt),
   };
+
+  const relatedQuery: Array<Record<string, unknown>> = [];
+
+  if (blog.category) {
+    relatedQuery.push({ category: blog.category });
+  }
+
+  if (blog.tags && blog.tags.length > 0) {
+    relatedQuery.push({ tags: { $in: blog.tags } });
+  }
+
+  let relatedPostsDocs: Array<Record<string, unknown>> = [];
+
+  if (relatedQuery.length > 0) {
+    relatedPostsDocs = await Blog.find(
+      {
+        _id: { $ne: blogDoc._id },
+        $or: relatedQuery,
+      },
+      'title slug shortDescription category'
+    )
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(4)
+      .lean<Array<Record<string, unknown>>>();
+  }
+
+  if (relatedPostsDocs.length < 3) {
+    const excludedIds = [blogDoc._id, ...relatedPostsDocs.map((post) => post._id)].filter(Boolean);
+
+    const fallbackPosts = await Blog.find(
+      { _id: { $nin: excludedIds } },
+      'title slug shortDescription category'
+    )
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(4 - relatedPostsDocs.length)
+      .lean<Array<Record<string, unknown>>>();
+
+    relatedPostsDocs = [...relatedPostsDocs, ...fallbackPosts];
+  }
+
+  const relatedPosts: RelatedBlogPost[] = relatedPostsDocs
+    .filter((post) => post.slug)
+    .map((post) => ({
+      id: String(post._id),
+      title: String(post.title || ''),
+      slug: String(post.slug || ''),
+      shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
+      category: post.category ? String(post.category) : undefined,
+    }));
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
   const pageUrl = `${baseUrl}/blogs/${blog.slug}`;
@@ -274,6 +331,31 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   ))}
                 </div>
               </div>
+            )}
+
+            {relatedPosts.length > 0 && (
+              <section className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {relatedPosts.map((post) => (
+                    <Link
+                      key={post.id}
+                      href={`/blogs/${post.slug}`}
+                      className="block rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50/40 transition-colors"
+                    >
+                      {post.category && (
+                        <span className="inline-block text-xs font-medium text-blue-700 bg-blue-100 rounded-full px-2 py-0.5 mb-2">
+                          {post.category}
+                        </span>
+                      )}
+                      <p className="text-sm font-semibold text-gray-900 mb-1">{post.title}</p>
+                      {post.shortDescription && (
+                        <p className="text-sm text-gray-600 line-clamp-2">{post.shortDescription}</p>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </section>
             )}
             
             <div className="mt-8 pt-6 border-t border-gray-200">
