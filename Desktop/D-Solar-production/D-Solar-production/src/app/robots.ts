@@ -9,11 +9,11 @@ export default function robots(): MetadataRoute.Robots {
         '/admin/',
         '/api/',
         '/private/',
+        '/confirm-appointment/',
       ],
     },
     sitemap: [
       'https://d-solar.asia/sitemap.xml',
-      'https://d-solar.asia/server-sitemap.xml'
     ],
   };
 } 

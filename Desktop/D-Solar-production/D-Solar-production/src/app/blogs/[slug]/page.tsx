@@ -26,7 +26,8 @@ interface RelatedBlogPost {
   category?: string;
 }
 
-export const revalidate = 300;
+// Prevent timer-based ISR churn; pages are refreshed via on-demand revalidation in admin APIs.
+export const revalidate = false;
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
