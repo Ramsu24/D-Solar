@@ -28,6 +28,8 @@ interface RelatedBlogPost {
 
 // Prevent timer-based ISR churn; pages are refreshed via on-demand revalidation in admin APIs.
 export const revalidate = false;
+// Serve only prebuilt blog slugs; unknown slugs return 404 instead of generating on demand.
+export const dynamicParams = false;
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
