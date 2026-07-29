@@ -120,6 +120,10 @@ const toIsoString = (value: unknown) => {
 };
 
 export async function generateStaticParams() {
+  if (process.env.VERCEL_ENV === 'preview') {
+    return [];
+  }
+
   try {
     await connectDB();
     const slugs = await Blog.find({}, 'slug').lean<Array<{ slug: string }>>();
