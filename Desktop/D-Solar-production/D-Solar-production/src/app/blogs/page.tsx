@@ -13,7 +13,7 @@ interface BlogPost {
   updatedAt: string;
 }
 
-export const dynamic = 'force-dynamic';
+export const revalidate = false;
 
 // Removing animation keyframes
 const styles = `
@@ -49,24 +49,27 @@ const toIsoString = (value: unknown) => {
 export default async function Blogs() {
   let blogs: BlogPost[] = [];
   let error: string | null = null;
+  const isPreviewDeployment = process.env.VERCEL_ENV === 'preview';
 
-  try {
-    await connectDB();
-    const posts = await Blog.find({}, 'title slug shortDescription imageUrl createdAt updatedAt')
-      .sort({ createdAt: -1 })
-      .lean<Array<Record<string, unknown>>>();
+  if (!isPreviewDeployment) {
+    try {
+      await connectDB();
+      const posts = await Blog.find({}, 'title slug shortDescription imageUrl createdAt updatedAt')
+        .sort({ createdAt: -1 })
+        .lean<Array<Record<string, unknown>>>();
 
-    blogs = posts.map((post) => ({
-      id: String(post._id),
-      title: String(post.title || ''),
-      slug: String(post.slug || ''),
-      shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
-      imageUrl: String(post.imageUrl || '/default-blog-image.jpg'),
-      createdAt: toIsoString(post.createdAt),
-      updatedAt: toIsoString(post.updatedAt || post.createdAt),
-    }));
-  } catch (err) {
-    error = err instanceof Error ? err.message : 'An error occurred while loading blog posts.';
+      blogs = posts.map((post) => ({
+        id: String(post._id),
+        title: String(post.title || ''),
+        slug: String(post.slug || ''),
+        shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
+        imageUrl: String(post.imageUrl || '/default-blog-image.jpg'),
+        createdAt: toIsoString(post.createdAt),
+        updatedAt: toIsoString(post.updatedAt || post.createdAt),
+      }));
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'An error occurred while loading blog posts.';
+    }
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
