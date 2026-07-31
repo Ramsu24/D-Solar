@@ -5,6 +5,7 @@ import Blog from '@/models/Blog';
 // The sitemap needs to be fully static for Next.js static site generation
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://d-solar.asia';
+  const isPreviewDeployment = process.env.VERCEL_ENV === 'preview';
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -39,6 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Temporary safeguard: skip DB reads in preview builds when environment access is limited.
+  if (isPreviewDeployment) {
+    return staticPages;
+  }
+
   try {
     await connectDB();
 
@@ -63,8 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.log(`✅ Sitemap generated: ${staticPages.length} static + ${blogPages.length} blog pages`);
     return [...staticPages, ...blogPages];
   } catch (error) {
-    console.error('❌ CRITICAL: Error generating sitemap with blog posts:', error);
-    console.error('This means blog posts are NOT in the sitemap and won\'t be indexed by Google!');
+    console.warn('Sitemap fallback: unable to load blog posts from MongoDB.', error);
     return staticPages;
   }
 } 

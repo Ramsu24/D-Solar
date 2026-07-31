@@ -27,6 +27,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     process.env.NEXT_PUBLIC_BASE_URL ||
     (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://d-solar.asia');
   const { slug } = await params;
+  const isPreviewDeployment = process.env.VERCEL_ENV === 'preview';
+
+  if (isPreviewDeployment) {
+    return {
+      title: 'Blog Post | D-Solar',
+      description: 'Read our latest blog post',
+      alternates: {
+        canonical: `${baseUrl}/blogs/${slug}`,
+      },
+    };
+  }
 
   try {
     await connectDB();
