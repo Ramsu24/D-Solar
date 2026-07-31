@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+
+const FREE_SOLAR_ANALYSIS_URL = 'https://spoke.opensolar.com/?uuid=05439106-201c-4fbb-9799-ccb1f489f5fa&override_lead_source=PROfile+Lead+Gen+AI&parent_href=https%3A%2F%2Fapp.opensolar.com%2Fprofile_page';
 
 interface ProjectCardProps {
   title: string;
@@ -649,9 +652,14 @@ export default function ProjectsPage() {
             <p className="text-xl max-w-3xl mx-auto mb-8 text-white/90">
             Contact us today for a free consultation and discover how we can help you harness the power of solar energy.
           </p>
-            <button className="bg-white text-yellow-500 font-bold py-3 px-10 rounded-full hover:bg-blue-800 hover:text-white transition-colors shadow-lg transform hover:scale-105 transition-transform">
-            Get Free Solar Analysis
-          </button>
+            <Link
+              href={FREE_SOLAR_ANALYSIS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-yellow-500 font-bold py-3 px-10 rounded-full hover:bg-blue-800 hover:text-white transition-colors shadow-lg transform hover:scale-105 transition-transform"
+            >
+              Get Free Solar Analysis
+            </Link>
         </div>
       </div>
       </main>
