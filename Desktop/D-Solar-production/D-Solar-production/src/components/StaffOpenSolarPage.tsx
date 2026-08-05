@@ -15,6 +15,7 @@ export default function StaffOpenSolarPage({ staffName }: StaffOpenSolarPageProp
         </p>
 
         <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
+          {/* Direct iframe embed is used for faster and more reliable preview rendering. */}
           <iframe
             title={`OpenSolar form for ${staffName}`}
             src={OPEN_SOLAR_PAGE_URL}
