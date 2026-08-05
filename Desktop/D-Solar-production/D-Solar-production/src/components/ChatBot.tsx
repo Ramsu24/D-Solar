@@ -121,14 +121,14 @@ const fetchAllPackages = async (): Promise<PackageData[]> => {
     const response = await fetch('/api/admin/packages');
     
     if (!response.ok) {
-      console.error(`Failed to fetch packages: ${response.status}`);
+      console.warn(`Packages API unavailable (${response.status}); continuing with fallback data.`);
       return [];
     }
     
     const packages = await response.json();
     return packages;
   } catch (error) {
-    console.error("Error fetching packages:", error);
+    console.warn('Packages API request failed; continuing with fallback data.');
     return [];
   }
 };

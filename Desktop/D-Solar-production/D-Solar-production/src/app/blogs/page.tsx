@@ -14,6 +14,9 @@ interface BlogPost {
 }
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const BLOGS_PAGE_LIMIT = 24;
 
 // Removing animation keyframes
 const styles = `
@@ -54,13 +57,16 @@ export default async function Blogs() {
     await connectDB();
     const posts = await Blog.find({}, 'title slug shortDescription imageUrl createdAt updatedAt')
       .sort({ createdAt: -1 })
+      .limit(BLOGS_PAGE_LIMIT)
       .lean<Array<Record<string, unknown>>>();
 
     blogs = posts.map((post) => ({
       id: String(post._id),
       title: String(post.title || ''),
       slug: String(post.slug || ''),
-      shortDescription: post.shortDescription ? String(post.shortDescription) : undefined,
+      shortDescription: post.shortDescription
+        ? truncateContent(String(post.shortDescription), 220)
+        : undefined,
       imageUrl: String(post.imageUrl || '/default-blog-image.jpg'),
       createdAt: toIsoString(post.createdAt),
       updatedAt: toIsoString(post.updatedAt || post.createdAt),
@@ -128,9 +134,7 @@ export default async function Blogs() {
                 />
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-2 text-primary">{blog.title}</h2>
-                  <p className="text-gray-600 mb-4">
-                    {truncateContent(blog.shortDescription || '')}
-                  </p>
+                  <p className="text-gray-600 mb-4">{blog.shortDescription || ''}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">
                       {new Date(blog.createdAt).toLocaleDateString()}

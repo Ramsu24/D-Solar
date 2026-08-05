@@ -14,13 +14,13 @@ export default function Header() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
-  // Don't show header on admin pages
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
+  const isAdminPage = pathname?.startsWith('/admin');
 
   useEffect(() => {
+    if (isAdminPage) {
+      return;
+    }
+
     const handleScroll = () => {
       const headerHeight = headerRef.current?.offsetHeight || 0;
       setShowScrollTop(window.scrollY > headerHeight);
@@ -37,7 +37,7 @@ export default function Header() {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timer);
     };
-  }, []);
+  }, [isAdminPage]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -48,6 +48,10 @@ export default function Header() {
 
   // Handle mouse move for spotlight effect
   useEffect(() => {
+    if (isAdminPage) {
+      return;
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       if (headerRef.current) {
         const rect = headerRef.current.getBoundingClientRect();
@@ -58,21 +62,24 @@ export default function Header() {
       }
     };
 
+    const handleMouseEnter = () => setIsHovering(true);
+    const handleMouseLeave = () => setIsHovering(false);
+
     const header = headerRef.current;
     if (header) {
       header.addEventListener('mousemove', handleMouseMove);
-      header.addEventListener('mouseenter', () => setIsHovering(true));
-      header.addEventListener('mouseleave', () => setIsHovering(false));
+      header.addEventListener('mouseenter', handleMouseEnter);
+      header.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
       if (header) {
         header.removeEventListener('mousemove', handleMouseMove);
-        header.removeEventListener('mouseenter', () => setIsHovering(true));
-        header.removeEventListener('mouseleave', () => setIsHovering(false));
+        header.removeEventListener('mouseenter', handleMouseEnter);
+        header.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, []);
+  }, [isAdminPage]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -80,6 +87,10 @@ export default function Header() {
 
   // Close menu when resizing to desktop
   useEffect(() => {
+    if (isAdminPage) {
+      return;
+    }
+
     const handleResize = () => {
       if (window.innerWidth >= 768 && isMenuOpen) {
         setIsMenuOpen(false);
@@ -87,10 +98,14 @@ export default function Header() {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isAdminPage]);
 
   // Prevent scrolling when mobile menu is open
   useEffect(() => {
+    if (isAdminPage) {
+      return;
+    }
+
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -99,9 +114,14 @@ export default function Header() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isAdminPage]);
 
   const navItems = ['Home', 'Projects', 'Blogs', 'About'];
+
+  // Don't show header on admin pages
+  if (isAdminPage) {
+    return null;
+  }
 
   return (
     <>
