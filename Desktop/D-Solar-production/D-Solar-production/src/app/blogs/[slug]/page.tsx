@@ -26,8 +26,10 @@ interface RelatedBlogPost {
   category?: string;
 }
 
-// Prevent timer-based ISR churn; pages are refreshed via on-demand revalidation in admin APIs.
-export const revalidate = false;
+// Bounded ISR: admin APIs call revalidatePath() for instant refresh on publish/edit/delete,
+// this cap ensures a transient render failure (e.g. a cold DB connection) self-heals instead
+// of caching a 404 forever.
+export const revalidate = 3600;
 
 // Only render known blog slugs statically. Unknown slugs should 404 instead of being generated on demand.
 export const dynamicParams = false;

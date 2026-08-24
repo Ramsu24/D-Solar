@@ -13,8 +13,7 @@ interface BlogPost {
   updatedAt: string;
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 const BLOGS_PAGE_LIMIT = 24;
 
