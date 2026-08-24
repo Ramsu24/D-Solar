@@ -26,10 +26,9 @@ interface RelatedBlogPost {
   category?: string;
 }
 
-// Bounded ISR: admin APIs call revalidatePath() for instant refresh on publish/edit/delete,
-// this cap ensures a transient render failure (e.g. a cold DB connection) self-heals instead
-// of caching a 404 forever.
-export const revalidate = 3600;
+// Always render fresh: static generation previously let Vercel's edge permanently
+// cache a 404 for a slug that didn't exist at build time, with no way to invalidate it.
+export const dynamic = 'force-dynamic';
 
 // Only render known blog slugs statically. Unknown slugs should 404 instead of being generated on demand.
 export const dynamicParams = false;
@@ -121,16 +120,6 @@ const toIsoString = (value: unknown) => {
 
   return date.toISOString();
 };
-
-export async function generateStaticParams() {
-  try {
-    await connectDB();
-    const slugs = await Blog.find({}, 'slug').lean<Array<{ slug: string }>>();
-    return slugs.map((item) => ({ slug: item.slug }));
-  } catch {
-    return [];
-  }
-}
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
